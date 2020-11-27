@@ -5,7 +5,9 @@ resourceGroupName="RG_CaseManagement"
 location="uksouth"
 
 cosmosDbName="$orgName-entities-$env"
-entityDbName="entities"
+entityDbName="entitydb"
+entityGraphName="entitygraph"
+partitionKeyPath="/name"
 
 uiAppName="$orgName-ui-$env"
 uiAppPlanName="${uiAppName}Plan"
@@ -36,31 +38,30 @@ then
 az cosmosdb create \
   --name $cosmosDbName \
   --resource-group $resourceGroupName \
+  --capabilities EnableGremlin \
   --default-consistency-level Session \
-  --locations regionName=$location failoverPriority=0 isZoneRedundant=False
+  --locations regionName=$location \
+  failoverPriority=0 isZoneRedundant=False
 
-az cosmosdb gremlin database create \
+az cosmosdb gremlin graph create \
   --account-name $cosmosDbName \
   --resource-group $resourceGroupName \
-  --name $entityDbName
-# depricated:
-# az cosmosdb database create \
-#   --name $cosmosDbName \
-#   --resource-group $resourceGroupName \
-# --db-name $entityDbName
+  --database-name $entityDbName \
+  --name $entityGraphName \
+  --partition-key-path $partitionKeyPath
 fi
 
 
 # Case Management UI (to be moved to UI repo)
-az appservice plan create \
-  --name $uiAppPlanName \
-  --resource-group $resourceGroupName \
-  --location $location \
-  --is-linux \
-  --sku $uiAppPlanSize
+# az appservice plan create \
+#   --name $uiAppPlanName \
+#   --resource-group $resourceGroupName \
+#   --location $location \
+#   --is-linux \
+#   --sku $uiAppPlanSize
 
-az webapp create \
-  --name $uiAppName \
-  --resource-group $resourceGroupName \
-  --plan $uiAppPlanName \
-  --deployment-container-image-name $dockerImageUri
+# az webapp create \
+#   --name $uiAppName \
+#   --resource-group $resourceGroupName \
+#   --plan $uiAppPlanName \
+#   --deployment-container-image-name $dockerImageUri
